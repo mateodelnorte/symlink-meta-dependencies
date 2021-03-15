@@ -28,8 +28,20 @@ if (childRepoPath === '--dry-run') {
 }
 
 const meta = getMetaFile();
+const recursiveSearch = (obj, results = []) => {
+  const r = results;
+  Object.keys(obj).forEach(key => {
+    const value = obj[key];
+    if (typeof value !== 'object') {
+      r.push(key);
+    } else if (typeof value === 'object') {
+      recursiveSearch(value, r);
+    }
+  });
+  return r;
+};
 
-const folders = (Object.keys(meta.projects).map((folder) => {
+const folders = (recursiveSearch(meta.projects).map((folder) => {
   return path.join(getMetaFile.getFileLocation(), '..', folder);
 }));
 

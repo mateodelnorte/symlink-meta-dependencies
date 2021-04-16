@@ -11,12 +11,10 @@ const getMetaFile = require('get-meta-file');
 const path = require('path');
 const program = require('commander');
 
-if ( ! process.argv[2] || process.argv[2] === '--help')
+if (!process.argv[2] || process.argv[2] === '--help')
   return console.log(`\n  usage:\n\n    symlink-meta-dependencies [child repository path] [--dry-run]\n`);
 
-let childRepoPath = process.argv[2] === 'blank' ?
-                      process.argv[3] :
-                      process.argv[2];
+let childRepoPath = process.argv[2] === 'blank' ? process.argv[3] : process.argv[2];
 
 childRepoPath = path.resolve(childRepoPath);
 
@@ -29,9 +27,9 @@ if (childRepoPath === '--dry-run') {
 
 const meta = getMetaFile();
 
-const folders = (Object.keys(meta.projects).map((folder) => {
+const folders = Object.keys(meta.projects).map(folder => {
   return path.join(getMetaFile.getFileLocation(), '..', folder);
-}));
+});
 
 folders.unshift(path.join(getMetaFile.getFileLocation(), '..'));
 
@@ -48,31 +46,28 @@ getMetaDependencies(folders, (err, graph) => {
 
     console.log(chalk.green(`${childProjectName} has ${numberOfDeps} dependencies to symlink`));
 
-    async.forEachOf(childGraph.deps, (version, childProjectName, cb) => {
+    async.forEachOf(
+      childGraph.deps,
+      (version, childProjectName, cb) => {
+        let source = graph[childProjectName].path;
+        let target = path.join(childRepoPath, 'node_modules', childProjectName);
 
-      let source = graph[childProjectName].path;
-      let target = path.join(childRepoPath, 'node_modules', childProjectName)
+        console.log(chalk.cyan(`creating symlink: ${target} -> ${source}`));
 
-      console.log(chalk.cyan(`creating symlink: ${target} -> ${source}`));
+        fs.exists(target, exists => {
+          if (!exists) return fs.symlink(source, target, 'dir', cb);
 
-      fs.exists(target, (exists) => {
-
-        if ( ! exists) return fs.symlink(source, target, 'dir', cb);
-
-        return fsExtra.rmrf(target, (err) => {
-          if (err) throw err;
-          return fs.symlink(source, target, 'dir', cb);
+          return fsExtra.rmrf(target, err => {
+            if (err) throw err;
+            return fs.symlink(source, target, 'dir', cb);
+          });
         });
+      },
+      err => {
+        if (err) throw err;
 
-      });
-
-    }, (err) => {
-      if (err) throw err;
-
-      console.log(chalk.green(`symlinked ${numberOfDeps} dependencies to ${childProjectName}`))
-
-    });
-
+        console.log(chalk.green(`symlinked ${numberOfDeps} dependencies to ${childProjectName}`));
+      }
+    );
   });
-
 });

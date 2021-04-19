@@ -27,7 +27,7 @@ if (childRepoPath === '--dry-run') {
 
 const meta = getMetaFile();
 
-const folders = Object.keys(meta.projects).map(folder => {
+const folders = Object.keys(meta.projects).map((folder) => {
   return path.join(getMetaFile.getFileLocation(), '..', folder);
 });
 
@@ -54,16 +54,16 @@ getMetaDependencies(folders, (err, graph) => {
 
         console.log(chalk.cyan(`creating symlink: ${target} -> ${source}`));
 
-        fs.exists(target, exists => {
+        fs.exists(target, (exists) => {
           if (!exists) return fs.symlink(source, target, 'dir', cb);
 
-          return fsExtra.rmrf(target, err => {
+          return fsExtra.rmrf(target, (err) => {
             if (err) throw err;
             return fs.symlink(source, target, 'dir', cb);
           });
         });
       },
-      err => {
+      (err) => {
         if (err) throw err;
 
         console.log(chalk.green(`symlinked ${numberOfDeps} dependencies to ${childProjectName}`));

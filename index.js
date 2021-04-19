@@ -3,7 +3,7 @@ const debug = require('debug')('meta-exec');
 const execSync = require('child_process').execSync;
 const path = require('path');
 
-module.exports = function(options, cb) {
+module.exports = function (options, cb) {
   if (options.suppressLogging === undefined) options.suppressLogging = false;
 
   options.dir = options.dir || process.cwd();
